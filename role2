@@ -1,0 +1,174 @@
+package wangzheBattle;
+
+
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+public class Role {
+      int x;
+      int y;
+      int life;
+      int isAlive;
+      int ObjX;
+      int ObjY;
+      int stillMove;
+      int beAttack;
+      int times;
+      int Blocked;
+      BufferedImage image;
+      final int Long= 1000;
+      final int Width= 1200;
+ 	  StringBuffer  [] Stone= new StringBuffer[Long];
+      Role(int xx, int yy){
+    	  x= xx;
+    	  y= yy;
+    	  isAlive= 1;
+    	  stillMove= 0;
+    	  life= 200;
+    	  beAttack= 0;
+    	  times= 0;
+    	  this.Blocked= 0;
+    	  this.getData(".\\src\\com\\King\\Stone.jpg");
+//    	  for(int i= 0; i< this.Long; i++)
+//    		  System.out.println(this.Stone[i]);
+      }
+      public void getData(String path) {
+          try {
+          for(int i= 0; i< this.Long; i++)
+        	   Stone[i]= new StringBuffer("");
+          //获取图像资源，转成BufferedImage对象
+          BufferedImage bimg = ImageIO.read(new File(path));
+          //创建一个二维数组，用来存放图像每一个像素位置的颜色值
+          int[][] data = new int[bimg.getHeight()][bimg.getWidth()];
+          //以高度为范围，逐列扫描图像，存进数组对应位置
+          for (int i = 0; i < bimg.getWidth(); i++) {
+          for (int j = 0; j < bimg.getHeight(); j++) {
+                data[j][i] = bimg.getRGB(i, j);//得到的是sRGB值，4字节
+               // System.out.println(data[i][j]);
+          }
+          }
+          //将数组旋转90°输出，实现逐行输出图像
+          //System.out.println(bimg.getHeight()+" "+ bimg.getWidth());
+          for (int i = 0; i < bimg.getHeight(); i++) {
+              for (int j = 0; j < bimg.getWidth(); j++) {
+                  if (data[i][j] != -1) {//有颜色输出
+                        Stone[i].append("1");
+	  		        } else { //无颜色输出
+	  		                Stone[i].append("0");
+	  		        }
+               }
+          }
+          } catch (IOException e) {
+              e.printStackTrace();
+          }
+       }
+
+     public void AddTime() {
+    	 if(this.isAlive== 0)
+    		  this.times++;
+    	 if(this.times== 500) {
+    		 this.times= 0;
+    		 this.isAlive= 1;
+    		 this.beAttack= 0;
+    	 }
+    		  
+     }
+     public void beAttack() {
+    	 this.beAttack++;
+    	 if(this.beAttack>= 1)
+    		  this.isAlive= 0;
+     }
+     public void setImage(BufferedImage im) {
+    	 image= im;
+     }
+     public BufferedImage getImage() {
+    	 return image;
+     }
+     public void moveTo(int xx, int yy) {
+    	   this.stillMove= 1;
+          ObjX= xx;
+           ObjY= yy;
+           
+	      	 if(this.x<ObjX) 
+	    		 this.x++;//+=5
+	    	 else if(this.x>ObjX)
+	    		 this.x--;//
+	    	 
+	    	 if(this.y< ObjY)
+	    		 this.y++;//
+	    	 else if(this.y> ObjY)
+	    		 this.y--;//-=5
+	    	 
+	    	 if(this.Stone[this.y+ 40].charAt(this.x+ 40)== '1')
+	    		 this.Blocked= 1;
+	    	 else 
+	    		 this.Blocked= 0;
+//	    	 System.out.print(this.x+ 40);
+//	    	 System.out.print(" ");
+//	    	 System.out.println(this.y+ 40);
+     }
+     public int getX() {
+    	 return this.x;
+     }
+     public int getY() {
+    	 return this.y;
+     }
+     public int JudgeAlive() {
+    	 return this.isAlive;
+     }
+     public void setStillMove() {
+    	 this.stillMove= this.stillMove== 0?1: 0;
+     }
+     public int getStillMove() {
+    	 if(this.stillMove== 1&&this.Blocked== 0)
+    		 return 1;
+    	 else
+    		 return 0;
+     }
+     
+     public void Move1() {
+    	 
+    	 if(this.y< ObjY)
+    		 this.y++;//+=4
+    	 else if(this.y> ObjY)
+    		 this.y--;//-=4
+    	 if(this.x<ObjX) 
+    		 this.x++;//+=4
+    	 else if(this.x>ObjX)
+    		 this.x--;//-=4
+    	 
+
+    	 if((this.x==ObjX&&this.y== ObjY)) {
+    		 this.stillMove= 0;
+    	 }
+    		 
+    	 
+     }
+     public void Move2() {
+    	 
+    	 if(this.y< ObjY)
+    		 this.y+=4;
+    	 else if(this.y> ObjY)
+    		 this.y-=4;
+    	 if(this.x<ObjX) 
+    		 this.x+=4;
+    	 else if(this.x>ObjX)
+    		 this.x-=4;
+    	 
+
+    	 if((this.x==ObjX&&this.y== ObjY)) {
+    		 this.stillMove= 0;
+    	 }
+    		 
+    	 
+     }
+}
+//if(this.Stone[this.y+ 40].charAt(this.x+ 20)== '1')
+//this.Blocked= 1;
+//else 
+//this.Blocked= 0;
+
