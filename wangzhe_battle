@@ -1,0 +1,467 @@
+package wangzheBattle;
+
+import java.awt.image.BufferedImage;
+import java.util.Timer;
+import java.awt.Font;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.event.*;
+//import java.awt.event.MouseEvent;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.Stack;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+/**
+ * @author LuoZH
+ */
+public class wangzheBattle extends JPanel implements ActionListener, KeyListener {
+
+
+	public static final int W = 1000+ 50; // 面板宽
+	public static final int H = 764; // 面板高   
+	public static final int N= 15;
+	public static final int herroSize= 80;
+	
+	public static BufferedImage BackGround;
+	public static BufferedImage role1;
+	public static BufferedImage role3;
+	public static BufferedImage role2;
+	public static BufferedImage BullGraph;
+	public static BufferedImage KO;
+	public static Timer timer;
+
+	public static int index;
+	public static int pos[][];
+	public static Bull HBu[];
+	public static String sta;
+	public static int herroSum;
+	//英雄
+	public static ACAttacker Janny;
+	public static ACAttacker BU;//----
+	public static  ACFighter MonkeyKing;
+	
+	//public static  ACFighter MonkeyKing;	
+	//public static  Robbi robbiA;
+	//public static  Robbi robbiB;
+	public static int RoleAnum;
+	public static int RoleBnum;
+	
+	static {
+		try {
+			
+			
+			BackGround= ImageIO.read(wangzheBattle.class.getResource("map3.png"));
+			role1= ImageIO.read(wangzheBattle.class.getResource("KO.png"));
+			BullGraph= ImageIO.read(wangzheBattle.class.getResource("Bullet-Boom.png"));
+			role3= ImageIO.read(wangzheBattle.class.getResource("r3.png"));
+			
+			role2=ImageIO.read(wangzheBattle.class.getResource("r1.png"));
+			KO= ImageIO.read(wangzheBattle.class.getResource("victory.png"));//victory
+			
+			Janny= new ACAttacker(10, 10);//
+			BU= new ACAttacker(700, 50);
+			MonkeyKing= new ACFighter(1100, 800);//
+			//victory
+			
+			
+			Janny.setImage(role1);
+			BU.setImage(role2);
+			MonkeyKing.setImage(role3);
+			//BU.setImage(role2);
+			
+			pos= new int[N][N];
+			HBu= new Bull[N];
+			sta= "END";
+			herroSum= 2;
+			RoleAnum= 5;
+            RoleBnum= 5;
+
+			for(int i= 0; i< N; i++)
+				HBu[i]= new Bull();
+		
+			//client= new Socket("172.29.30.191",8888);			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
+	 * 将图片绘画上窗体
+	 */
+	public void paint(Graphics g) {
+		
+		g.drawImage(BackGround, 0, 0, null); // 画背景图
+		paintHerro(g);
+		paintBull(g);
+		//paintKO(g);
+	}
+	/*
+	public void paintKO(Graphics g) {
+		if(RoleAnum== 0||RoleBnum== 0) {
+			g.drawImage(KO, 0, 0, null);
+			sta= "END";
+		}
+			 
+	}*/
+	/**
+	 * 绘画炸弹
+	 * @param g 同一张图片
+	 */
+	public void paintBull(Graphics g) {
+		for(int i= 0; i< N; i++) {
+			if(HBu[i].getIsAlive()== 1)
+				g.drawImage(HBu[i].getImage(), HBu[i].getX(), HBu[i].getY(), null);
+			if(HBu[i].timeToBoom== 1) {
+				g.drawImage(HBu[i].getBoom(), HBu[i].getX(), HBu[i].getY(), null);
+				HBu[i].timeToBoom= 0;
+			}
+		}
+		
+	}
+
+	/**
+	 * 绘画英雄
+	 * @param g 同一张图片
+	 */
+	public void paintHerro(Graphics g) {
+		if(Janny.JudgeAlive()== 1)
+			g.drawImage(Janny.getImage(), Janny.getX(), Janny.getY(), null);
+		if(BU.JudgeAlive()== 1)
+			g.drawImage(BU.getImage(), BU.getX(), BU.getY(), null);
+		if(MonkeyKing.JudgeAlive()== 1)
+			g.drawImage(MonkeyKing.getImage(), MonkeyKing.getX(), MonkeyKing.getY(), null);
+		
+	}
+	
+	
+	
+
+	JFrame frame = new JFrame("KingHero");
+	JPanel panel= new JPanel();
+	JButton button0= new JButton("Janny");
+	JButton button1= new JButton("*lufei");//BU
+	JButton button2= new JButton("MonkeyKing");
+	JButton button3= new JButton("*suolong");
+	JButton buttonA= new JButton("START");
+	
+
+    /**
+     * 键盘按下f
+     */
+	
+    public  void keyPressed(KeyEvent e) {
+	   if(e.getKeyCode()== KeyEvent.VK_0)
+	        index= 0;
+	   else if(e.getKeyCode()== KeyEvent.VK_1) {
+		   index= 1;
+	   }
+	   else if(e.getKeyCode()== KeyEvent.VK_2) {
+		   index= 2;
+	   }
+	   else if(e.getKeyCode()== KeyEvent.VK_3) {
+		   index= 3;
+	   }
+	   else if(e.getKeyCode()== KeyEvent.VK_4) {
+		   index= 4;
+	   }
+	   else if(e.getKeyCode()== KeyEvent.VK_S) {
+		    sta= "START";
+	   }
+	   else if(e.getKeyCode()== KeyEvent.VK_W){
+		    RoleUp();
+	   }
+	   else if(e.getKeyCode()== KeyEvent.VK_S){
+		   RoleDown();
+	   }
+	   else if(e.getKeyCode()== KeyEvent.VK_A){
+		   RoleLeft();
+	   }	  
+	   else if(e.getKeyCode()== KeyEvent.VK_D){
+		   RoleRight();
+	   }
+   }
+	public void keyReleased(KeyEvent e) {}
+	public void keyTyped(KeyEvent e) {}
+	//};		
+	public void RoleLeft() {
+		
+	}
+	public void RoleRight() {
+		
+	}
+    public void RoleUp() {
+    	if(index== 0) Janny.y--;
+    	if(index== 1) BU.y--;//
+    	if(index== 2) MonkeyKing.y--;
+    	
+    }
+    public void RoleDown() {
+    	if(index== 0) Janny.y++;
+    	if(index== 1) BU.y++;//
+    	if(index== 2) MonkeyKing.y++;
+    	
+    }
+	public void actionPerformed(ActionEvent e) {
+				if(button0== e.getSource()) {
+					
+					index= 0;
+				}
+				else if(button1== e.getSource()) {
+					index= 1;
+					
+				}
+				else if(button2== e.getSource()) {
+					index= 2;
+				}
+				else if(button3== e.getSource()) {
+					index= 3;
+				}
+				
+				else if(buttonA== e.getSource()) {
+					sta= "START";
+				}
+	}
+	
+	/**
+	 * 王者荣耀主函数
+	 */
+    
+	
+	public void Button() {
+    	button0.addActionListener(this);
+    	button1.addActionListener(this);
+    	button2.addActionListener(this);
+    	button3.addActionListener(this);
+    	buttonA.addActionListener(this);
+    	button0.setMnemonic(KeyEvent.VK_0);
+    	button1.setMnemonic(KeyEvent.VK_1);
+    	button2.setMnemonic(KeyEvent.VK_2);
+    	button3.setMnemonic(KeyEvent.VK_3);
+    	buttonA.setMnemonic(KeyEvent.VK_Q);
+    	panel.add(buttonA);
+		panel.add(button0);
+		panel.add(button1);
+		panel.add(button2);
+		panel.add(button3);
+		
+		
+		
+    }
+    
+    static wangzheBattle Battle = new wangzheBattle(); 
+    public void Frame() {
+			
+			panel.add(Battle);
+			frame.setSize(W, H);	
+			frame.setLayout(new BorderLayout());
+			frame.add(panel,BorderLayout.SOUTH);
+			frame.add(Battle, BorderLayout.CENTER);
+			frame.addKeyListener(this);	
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setVisible(true); //设置窗口可见
+         
+            
+			Battle.action(); // 启动执行    	
+    }
+    //frame.setIconImage(new ImageIcon("images/icon.jpg").getImage()); // 设置窗体的图标
+    //frame.setLocationRelativeTo(null); // 设置窗体初始位置
+    //frame.setAlwaysOnTop(true); // 设置其总在最上
+	
+    
+    public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		   // 面板对象
+         index= 0; 
+         System.out.printf("\n\n\n\n");
+         System.out.println("You Kill one hero!");
+         System.out.println("You update your rank!");
+         System.out.printf("\n\n\n\n");
+         Battle.Button();
+         Battle.Frame();
+	}
+	
+	/**
+	 * 主要线程函数
+	 */
+	public void action() {
+		MouseAdapter mouse= new MouseAdapter() {
+			public void mouseMoved(MouseEvent e) {
+				int x= e.getX();
+				int y= e.getY();
+				//hero.setpos(x, y);
+			}
+			public void mouseClicked(MouseEvent e) {
+				int x= e.getX();
+				int y= e.getY();
+				//sta= "START";
+                herroMoveTo(x- 50, y- 20);//  x-40 y-40
+			}
+			
+		};
+		this.addMouseListener(mouse); 
+		this.addMouseMotionListener(mouse);
+		
+		timer= new Timer();
+		timer.schedule(new TimerTask() {
+			public void run() {
+				if(sta== "START") {
+					  frame.requestFocus();	
+					  RoleAction();//英雄的移动与复活
+					  BullectAction();//子弹的移动与爆炸判断		     
+				}
+				repaint();
+			}
+			
+		},1000, 10);
+		
+		
+		
+		
+	}
+	
+	public void RoleAction() {	  
+		 //计数存活英雄数量
+		  RoleAnum= 0;
+		  RoleBnum= 0;
+		  if(Janny.JudgeAlive()== 1) 
+			  RoleAnum++;
+		  if(MonkeyKing.JudgeAlive()== 1) 
+			  RoleBnum++;
+		  //死亡英雄复活倒计时
+		  Janny.AddTime();
+		  MonkeyKing.AddTime();
+		  BU.AddTime();//
+		  //获取英雄位置
+		  pos[0][0]= Janny.getX(); pos[0][1]= Janny.getY();
+		  pos[0][0]= BU.getX(); pos[0][1]= BU.getY();//
+		  pos[2][0]= MonkeyKing.getX(); pos[2][1]= MonkeyKing.getY();
+		  
+		  //英雄的移动
+		  if(Janny.getStillMove()== 1) 
+				Janny.Move1();
+		  if(BU.getStillMove()== 1) //
+			  BU.Move1();
+			if(MonkeyKing.getStillMove()== 1)
+				MonkeyKing.Move1();
+	}
+	public void GetRolePosition() {
+		pos[0][0]= Janny.getX(); pos[0][1]= Janny.getY();
+		  pos[0][0]= BU.getX(); pos[0][1]= BU.getY();//
+		  pos[2][0]= MonkeyKing.getX(); pos[2][1]= MonkeyKing.getY();
+	}
+	
+	
+    public void BullectAction() {
+    	//检查子弹是否可以爆炸
+    	for(int i= 0; i< N; i++) {
+			 for(int j= 0; j< N; j++){
+				 if((HBu[i].getY()== pos[j][1]+ 15)&&JudgeAlive(j)== 1&&j!= i&&(i%2!= j%2)&&(HBu[i].getX()==pos[j][0]+ 15)) 
+				 {
+					  if(HBu[i].IsAlive== 1){
+							  changeBeAttack(j);
+						  HBu[i].IsAlive= 0;
+						  HBu[i].timeToBoom= 1;						  
+					  }
+
+				  
+					  			       
+				 }				 
+			 }
+
+		 }
+    	//子弹位置更新
+			for(int i= 0 ; i< N ; i++) {
+			if((pos[index][0]== pos[i][0]||pos[index][1]== pos[i][1])&&JudgeAlive(i)== 1&&i!= index) {
+				if(HBu[i].getIsAlive()== 0) {
+				  HBu[index].setIsAlive();
+				  HBu[index].setIndex(index);
+				  HBu[index].setBull(pos[index][0], pos[index][1]);
+				
+				  if(pos[index][1]== pos[i][1])
+					  HBu[index].setToX(pos[index][0]>  pos[i][0]? -1: 1);
+				      if(pos[index][0]== pos[i][0])
+					  HBu[index].setToY(pos[index][1]>  pos[i][1]? -1: 1);
+			      
+			     
+				}
+
+			}
+		}
+		  //子弹的移动
+		  for(int i= 0; i< N; i++) {
+				if(HBu[i].getIsAlive()== 1) {
+					HBu[i].Move1();
+					
+				}
+					
+			}
+    }
+    
+	
+	
+	
+   public void changeBeAttack(int i) {
+	    if(i== 0) Janny.beAttack();
+	    if(i== 1) BU.beAttack();//
+	    if(i== 2) MonkeyKing.beAttack();
+	    
+   }
+   
+   public int JudgeAlive(int i) {
+	    if(i== 0) return Janny.JudgeAlive();
+	    if(i== 1) return BU.JudgeAlive();
+	    if(i== 2) return MonkeyKing.JudgeAlive();
+	    
+	    
+	    return -1;
+   }
+	
+	
+	/**
+	 * 英雄移到
+	 * @param x 英雄移动到的X坐标
+	 * @param y 英雄移动到的Y坐标
+	 */
+	public void herroMoveTo(int x, int y) {
+		if(index== 0) {
+    		Janny.moveTo(x, y);//Janny.setStillMove();
+		}
+		else if(index== 1) {//
+			BU.moveTo(x, y);//BU.setStillMove();
+		}
+		else if(index== 2) {
+			MonkeyKing.moveTo(x, y);//MonkeyKing.setStillMove();
+		}
+		
+	}   
+	
+	
+	
+
+}
